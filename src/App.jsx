@@ -46,31 +46,36 @@ function App () {
           alert(data.error)
         } else {
           // we managed to sign in!
+
+          // store the token for later
           localStorage.setItem('token', data.token)
+
+          // put the user in state
           setUser(data.user)
         }
       })
   }
 
   function signOut () {
+    // remove the token from localStorage to "forget" the user
     localStorage.removeItem('token')
+
+    // unset the user in state
     setUser(null)
   }
 
   useEffect(() => {
     if (localStorage.token) {
       fetch('http://localhost:4000/validate', {
-        method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ token: localStorage.token })
+          Authorization: localStorage.token
+        }
       })
         .then(resp => resp.json())
         .then(data => {
           if (data.error) {
             // token was not good, we got an error back
-            alert('Invalid token!')
+            console.log('Invalid token!')
           } else {
             // token is good, we get the user back
             setUser(data)
@@ -79,36 +84,51 @@ function App () {
     }
   }, [])
 
+  if (user === null)
+    return (
+      <div className='App'>
+        <h1>Hello there, stranger!</h1>
+        <div>
+          <form onSubmit={signUp}>
+            <h2>Don't have an account? Sign up!</h2>
+            <input type='email' required placeholder='email' name='email' />
+            <input
+              type='password'
+              required
+              placeholder='password'
+              name='password'
+            />
+            <button>SIGN UP</button>
+          </form>
+
+          <form onSubmit={signIn}>
+            <h2>Already have an account? Sign in!</h2>
+            <input type='email' required placeholder='email' name='email' />
+            <input
+              type='password'
+              required
+              placeholder='password'
+              name='password'
+            />
+            <button>SIGN IN</button>
+          </form>
+        </div>
+      </div>
+    )
+
   return (
     <div className='App'>
-      <h1>Hello there, {user ? user.email : 'stranger'}!</h1>
-      {user ? <button onClick={signOut}>SIGN OUT</button> : null}
+      <h1>Hello there, {user.name}!</h1>
+      <button onClick={signOut}>SIGN OUT</button>
 
-      <div>
-        <form onSubmit={signUp}>
-          <h2>Don't have an account? Sign up!</h2>
-          <input type='email' required placeholder='email' name='email' />
-          <input
-            type='password'
-            required
-            placeholder='password'
-            name='password'
-          />
-          <button>SIGN UP</button>
-        </form>
-
-        <form onSubmit={signIn}>
-          <h2>Already have an account? Sign in!</h2>
-          <input type='email' required placeholder='email' name='email' />
-          <input
-            type='password'
-            required
-            placeholder='password'
-            name='password'
-          />
-          <button>SIGN IN</button>
-        </form>
-      </div>
+      <ul>
+        {user.photos.map(photo => (
+          <li>
+            <h2>{photo.title}</h2>
+            <img src={photo.imageUrl} alt='' />
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
